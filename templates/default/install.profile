@@ -47,7 +47,7 @@ function %project%_profile_modules() {
     'wysiwyg', 'better_formats',
 
     // Install Profile
-    'install_profile_api', 'node_export',
+    'install_profile_api', 'node_export'
     // */
   );
 

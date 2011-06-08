@@ -46,7 +46,9 @@ function drush_piewpiew_utils_create_project($name) {
     return drush_set_error("piewpiew_utils_create_project", "A folder or project named " . $name . " already exists");
   }
 
-  if (mkdir($name . '/profile', 0777, true)) {
+  $target = '__'.$name;
+
+  if (mkdir($target . '/profile', 0777, true)) {
 
     $template = drush_get_option('template', 'default');
     
@@ -66,15 +68,21 @@ function drush_piewpiew_utils_create_project($name) {
       return drush_set_error("piewpiew_utils_create_project", "Could not create update.sh file for your project.");
     }
 
-    
+    mkdir($target . '/profile/modules');
+    mkdir($target . '/profile/themes');
 
     $svn_url = drush_get_option('svn-path', false);
 
     if ($svn_url) {
       drush_log("Importing project to svn repository at $svn_url/trunk", "ok");
-      drush_shell_exec_interactive("svn import $name $svn_url/trunk -m \"Initial import\"");
+      drush_shell_exec_interactive("svn import $target $svn_url/trunk -m \"Initial import\"");
     }    
     
+    drush_log("Building site...", "ok");
+    drush_shell_exec_interactive("drush make --working-copy $target/build.make $name");
+
+    //rrmdir($target);
+
   } else {
     return drush_set_error("piewpiew_utils_create_project", "Could not create folder for your project.");
   }
@@ -90,7 +98,7 @@ function drush_piewpiew_utils_create_project($name) {
  */
 function _piewpiew_utils_create_build_file($template, $project) {
   $src  = dirname(__FILE__) . '/templates/'.$template.'/build.make';
-  $dest = $project . '/build.make';
+  $dest = '__'.$project . '/build.make';
   $replacements = array('%project%' => $project);
   $svn = drush_get_option('svn-path', false);
 
@@ -111,7 +119,7 @@ function _piewpiew_utils_create_build_file($template, $project) {
  */
 function _piewpiew_utils_create_profile_file($template, $project) {
   $src  = dirname(__FILE__) . '/templates/'.$template.'/install.profile';
-  $dest = $project . '/profile/' . $project . '.profile';
+  $dest = '__'.$project . '/profile/' . $project . '.profile';
   
   return _piewpiew_utils_replace_and_copy($src, $dest, array(
     '%project%' => $project,
@@ -128,7 +136,7 @@ function _piewpiew_utils_create_profile_file($template, $project) {
  */
 function _piewpiew_utils_create_profile_make($template, $project) {
   $src  = dirname(__FILE__) . '/templates/'.$template.'/profile.make';
-  $dest = $project . '/profile/' . $project . '.make';
+  $dest = '__'.$project . '/profile/' . $project . '.make';
   
   return _piewpiew_utils_replace_and_copy($src, $dest, array(
     '%project%' => $project,
@@ -145,7 +153,7 @@ function _piewpiew_utils_create_profile_make($template, $project) {
  */
 function _piewpiew_utils_create_update_script($template, $project) {
   $src  = dirname(__FILE__) . '/templates/'.$template.'/update.sh';
-  $dest = $project . '/profile/update.sh';
+  $dest = '__'.$project . '/profile/update.sh';
   
   return _piewpiew_utils_replace_and_copy($src, $dest, array(
     '%project%' => $project,
@@ -181,3 +189,16 @@ function _piewpiew_utils_replace_and_copy($src, $dest, $replacements=array()) {
   
   return drush_set_error("piewpiew_utils_create_project", "Could not create ".$dest." file for your project.");
 }
+
+function rrmdir($dir) { 
+   if (is_dir($dir)) { 
+     $objects = scandir($dir); 
+     foreach ($objects as $object) { 
+       if ($object != "." && $object != "..") { 
+         if (filetype($dir."/".$object) == "dir") rrmdir($dir."/".$object); else unlink($dir."/".$object); 
+       } 
+     } 
+     reset($objects); 
+     rmdir($dir); 
+   } 
+ } 

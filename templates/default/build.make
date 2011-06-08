@@ -29,5 +29,5 @@ projects[pressflow][download][url] = "http://files.pressflow.org/pressflow-6-cur
 ; Check out the install profile from svn
 projects[%project%][type]           = "profile"
 projects[%project%][download][type] = "svn"
-projects[%project%][download][url]  = "%svn-path%"
+projects[%project%][download][url]  = "%svn-path%/profile"
 projects[%project%][download][interactive] = "true"
